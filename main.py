@@ -19,7 +19,7 @@ button_width, button_height = 200, 50
 button_x, button_y = WIDTH // 2 - button_width // 2, HEIGHT // 2 - button_height // 2
 
 button_image = pygame.image.load("img.png").convert_alpha()
-button_image = pygame.transform.scale(button_image, (button_image.get_width() // 5, button_image.get_height() // 5))
+button_image = pygame.transform.scale(button_image, (button_image.get_width() // 15, button_image.get_height() // 15))
 
 # Funkcja rysująca tekst
 def draw_text(text, size, color, x, y):
