@@ -1,6 +1,8 @@
 import pygame
 import random
 
+from sparks import Sparks 
+
 pygame.init()
 
 WIDTH, HEIGHT = 800, 600
@@ -45,7 +47,7 @@ def draw_button(text, x, y, width, height, color, hover_color, action=None):
     draw_text(text, 30, BLACK, x + width / 2, y + height / 2)
 
 
-def display_key():
+def display_keys():
     while len(key_list) < KEYS_SIZE:
         key_list.append(random.choice(LETTERS))
 
@@ -56,11 +58,16 @@ def display_key():
 
     for i, item in enumerate(key_list):
         text = key_render(item)
-        text_rect = text.get_rect(center=(WIDTH / 2 + i * 50, HEIGHT / 2))
-        screen.blit(button_image, text_rect)
+        text_rect = text.get_rect(center=(WIDTH / 2 + i * 70, HEIGHT / 2))
+        button_rect = button_image.get_rect(center=(WIDTH / 2 + i * 70, HEIGHT / 2))
+        screen.blit(button_image, button_rect)
         screen.blit(text, text_rect)
 
-    return key_list.pop(0)
+def get_key():
+    while len(key_list) < KEYS_SIZE:
+        key_list.append(random.choice(LETTERS))
+    
+    return key_list[0]
 
 
 def display_score(score, reaction_time, average_reaction):
@@ -83,38 +90,49 @@ def display_score(score, reaction_time, average_reaction):
 def start_game():
     running = True
     clock = pygame.time.Clock()
+
     score = 0
     reaction_time = 0
     reaction_time_sum = 0
     run_num = 0
     average_reaction = 0
 
+    start_time = pygame.time.get_ticks()
+    sparks = Sparks(screen=screen)
+
+    key = get_key()
+
     while running:
         clock.tick(60)
         screen.fill((0, 0, 0))
-        key = display_key()
         display_score(score, reaction_time, average_reaction)
+        display_keys()
         pygame.display.update()
+                
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.unicode.isalpha() and event.unicode.upper() == key:
+                    run_num += 1
+                    score += 10
 
-        run_num += 1
-        waiting_for_key = True
-        start_time = pygame.time.get_ticks()
-        while waiting_for_key:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                    waiting_for_key = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.unicode.isalpha() and event.unicode.upper() == key:
-                        reaction_time = (pygame.time.get_ticks() - start_time) / 1000
-                        reaction_time_sum += reaction_time
-                        average_reaction = reaction_time_sum / run_num
-                        print("Poprawny klawisz! Czas reakcji: {:.3f} s".format(reaction_time))
-                        score += 10
-                        waiting_for_key = False
-                    else:
-                        print("Niepoprawny klawisz.")
-            pygame.display.update()
+                    sparks.create_sparks(WIDTH / 2, HEIGHT / 2, 20, (random.randint(50, 255), random.randint(50, 255), random.randint(50, 255)))
+
+                    reaction_time = (pygame.time.get_ticks() - start_time) / 1000
+                    reaction_time_sum += reaction_time
+                    average_reaction = reaction_time_sum / run_num
+                    print("Poprawny klawisz! Czas reakcji: {:.3f} s".format(reaction_time))
+                    
+                    start_time = pygame.time.get_ticks()
+                    key_list.pop(0)
+                    key = get_key()
+
+                else:
+                    print("Niepoprawny klawisz.")
+        sparks.update_sparks()
+        pygame.display.update()
+        
 
 
 # Główna pętla gry

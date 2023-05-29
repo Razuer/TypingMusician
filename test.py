@@ -10,8 +10,8 @@ height = 600
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Animacja Iskier")
 
-background_image = pygame.image.load("background.png")
-background_image = pygame.transform.scale(background_image, (width, height))
+# background_image = pygame.image.load("background.png")
+# background_image = pygame.transform.scale(background_image, (width, height))
 
 # Kolor tła
 background_color = (0, 0, 0)
@@ -38,7 +38,7 @@ class Spark:
 sparks = []
 
 # Metoda do tworzenia iskier
-def create_sparks(x, y, size, color):
+def create_sparks(x, y, size, color = (random.randint(50, 255), random.randint(50, 255), random.randint(50, 255))):
     for _ in range(size):
         spark = Spark(x, y, color)
         sparks.append(spark)
@@ -60,7 +60,7 @@ clock = pygame.time.Clock()
 
 while running:
     screen.fill(background_color)
-    screen.blit(background_image, (0, 0))
+    # screen.blit(background_image, (0, 0))
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
