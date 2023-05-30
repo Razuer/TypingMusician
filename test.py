@@ -10,8 +10,8 @@ height = 600
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Animacja Iskier")
 
-# background_image = pygame.image.load("background.png")
-# background_image = pygame.transform.scale(background_image, (width, height))
+background_image = pygame.image.load("graphics/city2.jpg")
+background_image = pygame.transform.scale(background_image, (width, height))
 
 # Kolor tła
 background_color = (0, 0, 0)
@@ -22,14 +22,16 @@ class Spark:
         self.x = x
         self.y = y
         self.color = color
-        self.radius = random.randint(2, 5)
-        self.speed_x = random.uniform(-4, 4)
-        self.speed_y = random.uniform(-4, 4)
+        self.radius = random.uniform(2, 4)
+        self.speed_x = random.uniform(-4., 4.)
+        self.speed_y = random.uniform(-4., 4.)
+        self.cycles = 0
 
     def update(self):
         self.x += self.speed_x
-        self.y += self.speed_y
-        self.radius -= 0.1
+        self.y += (self.speed_y + self.cycles/10) 
+        self.radius -= 0.02
+        self.cycles += 1
 
     def draw(self):
         pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), int(self.radius))
@@ -48,7 +50,7 @@ def update_sparks():
     alive_sparks = []
     for spark in sparks:
         spark.update()
-        if spark.radius > 0:
+        if spark.radius > 0 and not (spark.y > height or spark.x < 0 or spark.x > width):
             alive_sparks.append(spark)
             spark.draw()
     sparks[:] = alive_sparks
@@ -60,7 +62,7 @@ clock = pygame.time.Clock()
 
 while running:
     screen.fill(background_color)
-    # screen.blit(background_image, (0, 0))
+    screen.blit(background_image, (0, 0))
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -73,6 +75,12 @@ while running:
                 explosion_x = random.randint(100, width - 100)
                 explosion_y = random.randint(100, height - 100)
                 create_sparks(explosion_x, explosion_y, explosion_size, explosion_color)
+            
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            explosion_size = 150
+            explosion_color = (random.randint(50, 255), random.randint(50, 255), random.randint(50, 255))
+            explosion_x, explosion_y = pygame.mouse.get_pos()
+            create_sparks(explosion_x, explosion_y, explosion_size, explosion_color)
 
     # Aktualizowanie i rysowanie iskier
     update_sparks()
