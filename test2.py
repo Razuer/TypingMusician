@@ -1,48 +1,53 @@
 import pygame
+import numpy as np
+
+# Inicjalizacja biblioteki Pygame
 pygame.init()
 
-# Ustawienie rozmiaru okna:
-size = (700, 500)
-screen = pygame.display.set_mode(size)
+# Ustalenie rozmiaru okna
+window_width, window_height = 800, 600
+window = pygame.display.set_mode((window_width, window_height))
+pygame.display.set_caption("Kwadrat w rytm muzyki")
 
-# Ustawienie tytułu okna:
-pygame.display.set_caption("Poruszający się napis")
+# Inicjalizacja dźwięku
+pygame.mixer.init()
 
-# Ustawienia kolorów:
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
+# Załadowanie pliku dźwiękowego
+sound_file = "songs\sexy-fashion-beats-simulate-11176.wav"
+sound = pygame.mixer.Sound(sound_file)
 
-# Ustawienia czcionki i tekstu:
-font = pygame.font.Font(None, 36)
-text = font.render("Hello, World!", True, WHITE)
+# Pobranie informacji o częstotliwości próbkowania pliku dźwiękowego
+sample_rate = pygame.mixer.get_init()[0]
 
-# Początkowe położenie tekstu:
-text_x = size[0]
+# Odtwarzanie dźwięku w pętli
+sound.play(-1)
 
-# Główna pętla programu:
-done = False
-
-while not done:
-    # Wydarzenia (event) aplikacji:
+# Główna pętla programu
+running = True
+while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            done = True
+            running = False
 
-    # Wyczyszczenie ekranu:
-    screen.fill(BLACK)
+    # Pobranie próbek dźwięku
+    samples = pygame.sndarray.array(sound.get_buffer())
 
-    # Przemieszczenie tekstu o jeden piksel w lewo:
-    text_x -= 0.1
-    
-    # Sprawdzenie, czy tekst w całości zniknął z ekranu:
-    if text_x < -200:
-        text_x = size[0]
+    # Obliczenie średniej wartości amplitudy dźwięku
+    amplitude = np.mean(np.abs(samples))
 
-    # Wyświetlenie tekstu na ekranie:
-    screen.blit(text, [text_x, 250])
+    # Obliczenie rozmiaru kwadratu w zależności od amplitudy
+    square_size = int(amplitude * 200)
 
-    # Odświeżenie ekranu:
+    # Wyczyszczenie ekranu
+    window.fill((0, 0, 0))
+
+    # Wyświetlenie kwadratu na środku ekranu
+    square_x = (window_width - square_size) // 2
+    square_y = (window_height - square_size) // 2
+    pygame.draw.rect(window, (255, 255, 255), (square_x, square_y, square_size, square_size))
+
+    # Zaktualizowanie ekranu
     pygame.display.flip()
 
-# Po zakończeniu pętli:
+# Zakończenie programu
 pygame.quit()

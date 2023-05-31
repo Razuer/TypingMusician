@@ -25,17 +25,20 @@ class Spark:
         pygame.draw.circle(self.screen, self.color, (int(self.x), int(self.y)), int(self.radius))
 
 class Sparks:
-    def __init__(self, screen):
+    def __init__(self, screen, sound = True):
         self.sparks: list[Spark] = []
         self.screen: pygame.display = screen
+        self.sound = sound
         
     # Metoda do tworzenia iskier
     def create_sparks(self, x, y, size=50, color = (random.randint(50, 255), random.randint(50, 255), random.randint(50, 255))):
+        if self.sound:
+            pop = f"sounds/pop{random.randint(1, 5)}.mp3"
+            pygame.mixer.Sound(pop).play().set_volume(0.5)
         for _ in range(size):
             spark = Spark(self.screen, x, y, color)
             self.sparks.append(spark)
-        pop = f"sounds/pop{random.randint(1, 5)}.mp3"
-        pygame.mixer.Sound(pop).play().set_volume(0.5)
+        
 
     # Metoda do znikania iskier
     def update_sparks(self):
