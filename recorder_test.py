@@ -51,5 +51,5 @@ def run_test(file_path):
     # Wyłączanie modułu Pygame
     pygame.quit()
 
-file_path = 'songs/wav/fashion_beats.wav'
+file_path = 'songs/wav/hes-pirate.wav'
 run_test(file_path)

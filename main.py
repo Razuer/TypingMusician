@@ -1,284 +1,395 @@
+import os
+import sys
 import pygame
 import random
+import csv
+from pygame_textinput import TextInputManager, TextInputVisualizer
 
-#from sparks import Sparks 
-from sparks_sprite import Sparks
+from settings import *
 
 pygame.init()
 pygame.mixer.init()
 
-WIDTH, HEIGHT = 1000, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Type Musician")
+pygame.display.set_caption(TITLE)
 
-menu_image = pygame.image.load("graphics/Background/city.jpg").convert()
+menu_image = pygame.image.load(MENU_BG).convert()
 menu_image = pygame.transform.scale(menu_image, (WIDTH, HEIGHT))
 
-background_image = pygame.image.load("graphics/Background/city2.jpg").convert()
+background_image = pygame.image.load(GAME_BG).convert()
 background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
 
-stripe_image = pygame.image.load("graphics/stripe1.png").convert_alpha()
+savescore_image = pygame.image.load('graphics/Background/savescore.png').convert_alpha()
+savescore_image = pygame.transform.scale_by(savescore_image, 1.4)
+savescore_image.set_alpha(200)
+
+stripe_image = pygame.image.load(STRIPE).convert_alpha()
 stripe_image = pygame.transform.scale(stripe_image, (WIDTH, HEIGHT))
 stripe_image.set_alpha(200)
 
-aim_image = pygame.image.load("graphics/Aim/aim1.png").convert_alpha()
-aim_image = pygame.transform.scale_by(aim_image, 0.45)
-aim_image.set_alpha(200)
+from sprites import Key, Button, Aim, Text, Sparks
 
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-GRAY = (128, 128, 128)
-
-LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
-           'W', 'X', 'Y', 'Z']
-
-# Key images
-key1_image = pygame.image.load("graphics/Key/key1.png").convert_alpha()
-key2_image = pygame.image.load("graphics/Key/key2.png").convert_alpha()
-key3_image = pygame.image.load("graphics/Key/key3.png").convert_alpha()
-key4_image = pygame.image.load("graphics/Key/key4.png").convert_alpha()
-key5_image = pygame.image.load("graphics/Key/key5.png").convert_alpha()
-key6_image = pygame.image.load("graphics/Key/key6.png").convert_alpha()
-key7_image = pygame.image.load("graphics/Key/key7.png").convert_alpha()
-key_images = [key1_image, key2_image, key3_image, key4_image, key5_image, key6_image, key7_image]
-key_images = [pygame.transform.scale_by(key, 0.45) for key in key_images]
-
-class Aim(pygame.sprite.Sprite):
-    def __init__(self, keys) -> None:
-        super().__init__()
-        aim_img1 = pygame.image.load("graphics/Aim/aim1.png").convert_alpha()
-        aim_img1 = pygame.transform.scale_by(aim_img1, 0.45)
-        aim_img1.set_alpha(200)
-        aim_img2 = pygame.image.load("graphics/Aim/aim1.png").convert_alpha()
-        aim_img2 = pygame.transform.scale_by(aim_img2, 0.5)
-        aim_img2.set_alpha(200)
-        aim_img3 = pygame.image.load("graphics/Aim/aim3.png").convert_alpha()
-        aim_img3 = pygame.transform.scale_by(aim_img3, 0.4)
-        aim_img3.set_alpha(200)
-        self.aim = [aim_img1, aim_img2, aim_img3]
-
-        self.keys = keys
-
-        self.image = self.aim[0]
-        self.rect = self.image.get_rect(center = (220, 250))
-
-    def animation(self):
-        if pygame.sprite.spritecollide(self, self.keys):
-            self.image = self.aim[1]
-        elif pygame.key.get_pressed():
-            self.image = self.aim[2]
-        else: 
-            self.image = self.aim[0]
-
-    def update(self):
-        self.animation()
-
-class Key(pygame.sprite.Sprite):
-    def __init__(self, revival, speed) -> None:
-        super().__init__()
-
-        self.key = random.choice(LETTERS)
-        self.revival = revival
-        self.time_alive = 0
-        self.speed = speed
-
-        self.image = random.choice(key_images)
-        self.rect = self.image.get_rect(center = (WIDTH, HEIGHT // 2 + 10))
-
-    def update(self, current_time):
-        self.rect.x -= self.speed
-        self.time_alive = (current_time - self.revival)
-
-        self.drawLetter()
-        self.destroy()
-
-    def drawLetter(self):
-        font = pygame.font.Font('fonts/font.ttf', 32)
-
-        text = font.render(self.key, False, (255, 255, 255))
-        text1 = font.render(self.key, False, (0, 0, 0))
-
-        text_rect = text.get_rect(center=(self.rect.centerx + 10, self.rect.centery - 2))
-
-        text1_rect = text1.get_rect(center=(self.rect.centerx + 10 + 2, self.rect.centery - 2 + 2))
-        text2_rect = text1.get_rect(center=(self.rect.centerx + 10 + 2, self.rect.centery - 2 - 2))
-        text3_rect = text1.get_rect(center=(self.rect.centerx + 10 - 2, self.rect.centery - 2 + 2))
-        text4_rect = text1.get_rect(center=(self.rect.centerx + 10 - 2, self.rect.centery - 2 - 2))
-
-        screen.blit(text1, text1_rect)
-        screen.blit(text1, text2_rect)
-        screen.blit(text1, text3_rect)
-        screen.blit(text1, text4_rect)
-        screen.blit(text, text_rect)
-
-    def destroy(self):
-        if self.rect.x <= -100: 
-            print(f"boom! {self}")
-            self.kill()
-
-    def __str__(self) -> str:
-        return f"Key - {self.key} - {self.revival} - {self.time_alive} - (x,y): ({self.rect.x},{self.rect.y})"
-
-
-keys_group = pygame.sprite.Group()
-
-KEYS_SIZE = 40
-
-# Funkcja rysująca tekst
 def draw_text(text, size, color, x, y):
-    font = pygame.font.Font('fonts/font.ttf', size)
+    font = pygame.font.Font(FONT, size)
     text_surface = font.render(text, False, color)
-    text_rect = text_surface.get_rect()
-    text_rect.center = (x, y)
+    text_rect = text_surface.get_rect(center = (x, y))
     screen.blit(text_surface, text_rect)
 
-
-class Button(pygame.sprite.Sprite):
-
-    def __init__(self, text, x, y, width, height, color, hover_color, border_color, action=None):
-        super().__init__()
-
-        self.image = pygame.Surface((width, height))
-        self.image.fill(color)
-        self.rect = self.image.get_rect(center=(x, y))
-
-        self.text = text
-        self.color = color
-        self.hover_color = hover_color
-        self.border_color = border_color
-        self.action = action
-
-    def update(self):
-        mouse = pygame.mouse.get_pos()
-        click = pygame.mouse.get_pressed()
-
-        if self.rect.collidepoint(mouse):
-            self.image.fill(self.hover_color)
-            
-            if click[0] == 1 and self.action is not None:
-                self.action()
-        else:
-            self.image.fill(self.color)
-        pygame.draw.rect(self.image, self.border_color, self.image.get_rect(), 3)  # Dodajemy czarne obramowanie
-
-        draw_text(self.text, int(self.rect.height//1.5), BLACK, self.rect.centerx, self.rect.centery-2)
-
-
-
-rev = 0
-def create_key():
-    global rev 
-
-    rev += random.uniform(0.1, 1)
-    key = Key(rev, 7)
-    keys_group.add(key)
-
-
-def get_key():
-    if len(keys_group) > 0:
-
-        return keys_group[0]
-    else:
-         return None
-
-
-def display_score(score, reaction_time, average_reaction):
-    font = pygame.font.Font('fonts/font.ttf', 20)
+def display_score(score, fps):
+    font = pygame.font.Font(FONT, 20)
 
     text = font.render(str(score), False, (255, 255, 255))
     text_rect = text.get_rect(topright=(WIDTH - 10, 10))
 
-    reaction_text = font.render("Reaction time: {:.3f} s".format(reaction_time), False, (255, 255, 255))
+    reaction_text = font.render("FPS: {:.3f}".format(fps), False, (255, 255, 255))
     reaction_text_rect = reaction_text.get_rect(topleft=(10, 10))
 
-    average_text = font.render("Average reaction time: {:.3f} s".format(average_reaction), False, (255, 255, 255))
-    average_text_rect = reaction_text.get_rect(topleft=(10, 56))
-
-    screen.blit(average_text, average_text_rect)
     screen.blit(reaction_text, reaction_text_rect)
     screen.blit(text, text_rect)
 
-key_timer = pygame.USEREVENT + 2
-pygame.time.set_timer(key_timer, random.randint(500, 1800))
-
-def start_game():
+def leaderboard():
     running = True
     clock = pygame.time.Clock()
-    pygame.mixer.stop()
-    score = 0
-    reaction_time = 0
-    reaction_time_sum = 0
-    run_num = 0
-    average_reaction = 0
-    app_start_time = pygame.time.get_ticks()
-    start_time = pygame.time.get_ticks()
-    sparks = Sparks(True)
-
-    # key = get_key().key
-    
-    while running:
-        clock.tick(60)
-        screen.fill((22, 22, 22))
-        screen.blit(background_image, (0, 0))
-        screen.blit(stripe_image, (0,13))
-        
-        display_score(score, reaction_time, average_reaction)
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-                exit()
-            
-            if event.type == pygame.KEYDOWN:
-                if event.unicode.isalpha() and event.unicode.upper() == key:
-                    run_num += 1
-                    score += 10
-
-                    sparks.create_sparks(WIDTH / 2, HEIGHT / 2, 20, (random.randint(50, 255), random.randint(50, 255), random.randint(50, 255)))
-
-                    reaction_time = (pygame.time.get_ticks() - start_time) / 1000
-                    reaction_time_sum += reaction_time
-                    average_reaction = reaction_time_sum / run_num
-                    print("Poprawny klawisz! Czas reakcji: {:.3f} s".format(reaction_time))
-                    
-                    start_time = pygame.time.get_ticks()
-                    # key = get_key().key
-
-                else:
-                    print("Niepoprawny klawisz.")
-
-            if event.type == key_timer:
-                create_key()
-                pygame.time.set_timer(key_timer, random.randint(500, 1800))
-
-        keys_group.draw(screen)
-        keys_group.update((pygame.time.get_ticks() - app_start_time) / 1000)
-        screen.blit(aim_image, (220,245))
-        sparks.draw(screen)
-        sparks.update()
-        pygame.display.update()
-        
-
-# Główna pętla gry
-def main_menu():
-    running = True
-    clock = pygame.time.Clock()
-
-    sparks = Sparks(True)
-
-    # Ustawienie losowych interwałów dla tworzenia iskier
+    sparks = Sparks(WIDTH, HEIGHT, True)
     SPARKS_EVENT = pygame.USEREVENT + 1
     pygame.time.set_timer(SPARKS_EVENT, random.randint(500, 1500))
-
-    pygame.mixer.Sound('songs/mp3/dream-land.mp3').play(-1)
     
     button_group = pygame.sprite.Group()
-    button_group.add(Button("Start", WIDTH // 2 , HEIGHT // 1.7, 200, 50, GRAY, WHITE, BLACK, start_game))
+    but1 = Button(screen, "Return", WIDTH // 2 , HEIGHT // 2 + 180, 300, 50, GRAY, WHITE, BLACK)
+    button_group.add(but1)
 
     while running:
         clock.tick(60)
         screen.blit(menu_image, (0, 0))
+        current_time = pygame.time.get_ticks()
+
+        if not pygame.mixer.music.get_busy():
+            pygame.mixer.music.load('songs/mp3/dream-land.mp3')
+            pygame.mixer.music.play()
+
+        # Obsługa zdarzeń
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                sys.exit()
+            elif event.type == SPARKS_EVENT:
+                sparks.create_sparks(random.randint(0, WIDTH), random.randint(0, HEIGHT - 50))
+                pygame.time.set_timer(SPARKS_EVENT, random.randint(500, 1500)) # Wywoływanie co losową liczbę milisekund
+            
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                explosion_x, explosion_y = pygame.mouse.get_pos()
+                sparks.create_sparks(explosion_x, explosion_y)
+
+                if but1.checkForInput():
+                    main_menu()
+
+        sparks.draw(screen)
+        sparks.update()
+
+        button_group.draw(screen)
+        button_group.update()
+
+        draw_text("Leaderboard", 40, WHITE, WIDTH//2, 60)
+        draw_text("EASY", 30, WHITE, WIDTH//2 - 300, 150)
+        draw_text("MEDIUM", 30, WHITE, WIDTH//2, 150)
+        draw_text("HARD", 30, WHITE, WIDTH//2 + 300, 150)
+
+        pygame.draw.line(screen, WHITE, (350, 130), (350, 430), 2)
+        pygame.draw.line(screen, WHITE, (650, 130), (650, 430), 2)
         
+        pygame.display.update()
+
+def start_game(song_path = None):
+    key_timings = None
+    if song_path:
+        with open(f"{os.path.splitext(song_path)[0]}.txt", "r") as file:
+            # Odczytanie linii z pliku i usunięcie znaków nowej linii
+            key_timings = [int(line.strip()) for line in file.readlines()]
+            pygame.mixer.fadeout(1000)
+
+            pygame.mixer.music.load(song_path)
+            zen = False
+    else:
+        pygame.mixer.music.load("songs/wav/hes-pirate.wav")
+        key_timer = pygame.USEREVENT + 2
+        pygame.time.set_timer(key_timer, random.randint(500, 1800))
+        zen = True
+
+    end_timer = pygame.USEREVENT + 3
+    savescore_timer = pygame.USEREVENT + 4
+    pygame.time.set_timer(savescore_timer, 1000)
+
+    clock = pygame.time.Clock()
+    sparks = Sparks(WIDTH, HEIGHT, False)
+    delayed_sparks = []
+    destroy_sparks = Sparks(WIDTH, HEIGHT, False)
+    keys_group = pygame.sprite.Group()
+    aim_group = pygame.sprite.GroupSingle()
+    texts_group = pygame.sprite.Group()
+    aim = Aim(keys_group)
+    aim_group.add(aim)
+
+    score = 0
+    play_music = False
+    
+    start_time = pygame.time.get_ticks()
+    timerSet = False
+    running = True
+    while running:
+        current_time = pygame.time.get_ticks() - start_time
+
+        if not play_music and current_time >= DELAY:
+            if zen: pygame.mixer.music.play(-1)
+            else: pygame.mixer.music.play()
+
+            play_music = True
+
+        colided: Key = pygame.sprite.spritecollide(aim, keys_group, False)
+        pressed = False
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                exit()
+            elif event.type == end_timer:
+                save_score(score, song_path)
+            elif event.type == pygame.KEYDOWN :
+                pressed = True
+                if event.key == pygame.K_ESCAPE:
+                    running = False
+                
+                elif event.unicode.isalpha() and colided and event.unicode.upper() == colided[0].key:                    
+                    destroy_sparks.create_sparks(aim.rect.centerx, aim.rect.centery, 90)
+        
+                    dist = abs(aim.rect.centerx - colided[0].rect.centerx)
+                    if dist < 12:
+                        texts_group.add(Text("PERFECT!", 40, CYAN, 500, 150, 1000, current_time))
+                        texts_group.add(Text("+10", 20, CYAN, random.randint(190, 250), random.randint(270, 330), 700, current_time))
+                        score += 10
+                    else : 
+                        texts_group.add(Text("GOOD!", 35, WHITE, 500, 150, 1000, current_time))
+                        texts_group.add(Text("+5", 20, WHITE, random.randint(190, 250), random.randint(270, 330), 700, current_time))
+                        score += 5
+                    
+                    colided[0].is_alive = False
+        
+            elif zen and event.type == key_timer:
+                delayed_sparks.append(current_time+DELAY)
+                keys_group.add(Key(screen, current_time, KEY_SPEED))
+                pygame.time.set_timer(key_timer, random.randint(300, 1000))
+
+        if key_timings and key_timings[0] <= current_time:
+            delayed_sparks.append(current_time+DELAY)
+            keys_group.add(Key(screen, current_time, KEY_SPEED))
+            key_timings.pop(0)
+
+        if delayed_sparks and delayed_sparks[0] <= current_time:
+            sparks.create_sparks(random.randint(0, WIDTH), random.randint(0, HEIGHT - 50))
+            delayed_sparks.pop(0)
+
+        screen.blit(background_image, (0, 0))
+
+        sparks.draw(screen)
+        sparks.update()
+    
+        screen.blit(stripe_image, (0,13))
+        
+        display_score(score, clock.get_fps())
+
+        keys_group.draw(screen)
+        keys_group.update((current_time) / 1000)
+
+        destroy_sparks.draw(screen)
+        destroy_sparks.update()
+
+        aim_group.draw(screen)
+        aim_group.update(pressed)
+
+        texts_group.draw(screen)
+        texts_group.update(current_time)
+
+        pygame.display.update()
+        clock.tick(FPS)
+
+        if not pygame.mixer.music.get_busy() and play_music and not timerSet:
+            pygame.time.set_timer(end_timer, 1800)
+            timerSet = True
+
+    pygame.mixer.music.fadeout(1500)
+        
+def save_score(score, song_path):
+    clock = pygame.time.Clock()
+    buttons_group = pygame.sprite.Group()
+    but1 = Button(screen, "Save score", 500, 400, 300, 50, CYAN, WHITE, BLACK)
+    but2 = Button(screen, "Exit", 500, 460, 300, 50, CYAN, WHITE, BLACK)
+    buttons_group.add(but1, but2)
+
+    pygame.mixer.music.load(song_path)
+    pygame.mixer.music.set_volume(0.1)
+    pygame.mixer.music.play(-1)
+
+    font = pygame.font.Font(FONT, 40)
+    manager = TextInputManager(validator = lambda input: len(input) <= 15)
+    textinput = TextInputVisualizer(manager=manager, font_object=font, font_color=BLACK)
+
+    input_surface = pygame.Surface((500, 60))
+    input_surface.fill((255, 255, 255))  # Biały kolor prostokąta
+    input_rect = input_surface.get_rect(center=(WIDTH/2, HEIGHT/2))
+
+    
+    def save_it(player_name):
+        song = ''
+        if song_path == PERFECT:
+            song = "PERFECT"
+        elif song_path == DREAMLAND:
+            song = 'DREAMLAND'
+        
+        # Dodaj wynik do pliku CSV
+        with open(SCORES_FILE, 'a', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow([player_name, score, song])
+        
+        # Posortuj zawartość pliku CSV i zapisz ją z powrotem
+        with open(SCORES_FILE, 'r', newline='') as f:
+            reader = csv.reader(f)
+            sorted_rows = sorted(reader, key=lambda row: (row[2], int(row[1]), row[0]))
+        
+        with open(SCORES_FILE, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerows(sorted_rows)    
+
+    saved = False
+    if score < 100:
+        congrats = random.choice(['MEH...', 'IMPRESSIVE... NOT', 'STELLAR EFFORT.', 'KEEP PRACTICING!'])
+    else:
+        congrats = random.choice(['GREAT!', 'AMAZING!', 'AWESOME!', 'WHAT A PRO!'])
+    pygame.key.set_repeat(200, 25)
+    while True:
+                screen.blit(background_image, (0, 0))
+                screen.blit(savescore_image, savescore_image.get_rect(center=(500, 300)))
+                
+                draw_text(congrats, 45, WHITE, 500, 150)
+                draw_text(f"Your score: {score}", 30, WHITE, 500, 200)
+                draw_text("Enter your nick:", 20, WHITE, input_rect.midtop[0], input_rect.midtop[1]-15)
+                buttons_group.draw(screen)
+                buttons_group.update()
+
+                events = pygame.event.get()
+                
+                screen.blit(input_surface, input_rect)
+
+                textinput.update(events)
+                screen.blit(textinput.surface, (input_rect.x+15, input_rect.y+5))
+
+                if(len(textinput.value) > 0) and not saved : but1.active = True
+                else: but1.active = False
+
+                for event in events:
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        sys.exit()
+                    elif event.type == pygame.MOUSEBUTTONDOWN:
+                        if but1.checkForInput() and not saved:
+                            print('but1')
+                            saved = True
+                            save_it(textinput.value)
+                        if but2.checkForInput():
+                            pygame.mixer.music.fadeout(1000)
+                            level_select()
+                pygame.display.update()
+                clock.tick(FPS)
+
+def level_select():
+    running = True
+    clock = pygame.time.Clock()
+    sparks = Sparks(WIDTH, HEIGHT, True)
+    SPARKS_EVENT = pygame.USEREVENT + 1
+    pygame.time.set_timer(SPARKS_EVENT, random.randint(500, 1500))
+    
+    but1 = Button(screen, "He's a Pirate! - HARD", WIDTH // 2 , HEIGHT // 2 - 200, 440, 50, GRAY, WHITE, BLACK)
+    but2 = Button(screen, "MEDIUM", WIDTH // 2 , HEIGHT // 2 - 120, 440, 50, GRAY, WHITE, BLACK)
+    but3 = Button(screen, "Perfect - EASY", WIDTH // 2 , HEIGHT // 2 + - 40, 440, 50, GRAY, WHITE, BLACK)
+    but4 = Button(screen, "Zen Mode", WIDTH // 2 , HEIGHT // 2 + 40, 440, 50, GRAY, WHITE, BLACK)
+    but6 = Button(screen, "Custom Song", WIDTH // 2 - 60, HEIGHT // 2 + 120, 320, 50, GRAY, WHITE, BLACK)
+    but7 = Button(screen, "Load", but6.rect.midright[0] + 65, HEIGHT // 2 + 120, 110, 50, GRAY, WHITE, BLACK)
+    but5 = Button(screen, "Return", WIDTH // 2 , HEIGHT - 50, 420, 50, GRAY, WHITE, BLACK)
+    button_group = pygame.sprite.Group(but1, but2, but3, but4, but5, but6, but7)
+
+    pygame.mixer.music.set_volume(1)
+
+    while running:
+        clock.tick(60)
+        screen.blit(menu_image, (0, 0))
+        current_time = pygame.time.get_ticks()
+
+        if not pygame.mixer.music.get_busy():
+            pygame.mixer.music.load('songs/mp3/dream-land.mp3')
+            pygame.mixer.music.play()
+
+        # Obsługa zdarzeń
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                sys.exit()
+            elif event.type == SPARKS_EVENT:
+                sparks.create_sparks(random.randint(0, WIDTH), random.randint(0, HEIGHT - 50))
+                pygame.time.set_timer(SPARKS_EVENT, random.randint(500, 1500)) # Wywoływanie co losową liczbę milisekund
+            
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                explosion_x, explosion_y = pygame.mouse.get_pos()
+                sparks.create_sparks(explosion_x, explosion_y)
+
+                if but1.checkForInput():
+                    start_game(PIRATE)
+                if but2.checkForInput():
+                    start_game(DREAMLAND)
+                if but3.checkForInput():
+                    start_game(PERFECT)
+                if but4.checkForInput():
+                    start_game()
+                if but5.checkForInput():
+                    running = False
+                    main_menu()
+
+        sparks.draw(screen)
+        sparks.update()
+
+        button_group.draw(screen)
+        button_group.update()
+        
+        pygame.display.update()
+
+def main_menu():
+    running = True
+    clock = pygame.time.Clock()
+
+    sparks = Sparks(WIDTH, HEIGHT, True)
+
+    # Ustawienie losowych interwałów dla tworzenia iskier
+    SPARKS_EVENT = pygame.USEREVENT + 1
+    pygame.time.set_timer(SPARKS_EVENT, random.randint(500, 1500))
+    
+    button_group = pygame.sprite.Group()
+    text_group = pygame.sprite.Group()
+
+    def add_text(text):
+        text_group.add(Text(text, 60, WHITE, 500, 400, 2000, pygame.time.get_ticks()))
+
+    but1 = Button(screen, "Start", WIDTH // 2 , HEIGHT // 2, 300, 50, GRAY, WHITE, BLACK)
+    but2 = Button(screen, "Leaderboard", WIDTH // 2 , HEIGHT // 2 + 80, 300, 50, GRAY, WHITE, BLACK)
+    but3 = Button(screen, "Exit", WIDTH // 2 , HEIGHT // 2 + 160, 300, 50, GRAY, WHITE, BLACK)
+    button_group.add(but1)
+    button_group.add(but2)
+    button_group.add(but3)
+
+    while running:
+        clock.tick(60)
+        screen.blit(menu_image, (0, 0))
+        current_time = pygame.time.get_ticks()
+
+        if not pygame.mixer.music.get_busy():
+            pygame.mixer.music.load('songs/mp3/dream-land.mp3')
+            pygame.mixer.music.play()
+
         # Obsługa zdarzeń
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -291,23 +402,29 @@ def main_menu():
                 explosion_x, explosion_y = pygame.mouse.get_pos()
                 sparks.create_sparks(explosion_x, explosion_y)
 
+                if but1.checkForInput():
+                    level_select()
+                if but2.checkForInput():
+                    leaderboard()
+                if but3.checkForInput():
+                    pygame.quit()
+                    sys.exit()
+                
         sparks.draw(screen)
         sparks.update()
 
         button_group.draw(screen)
         button_group.update()
 
-        # Rysowanie elementów menu
-        draw_text("Type Musician", 60, (228, 108, 235), WIDTH // 2, HEIGHT // 4)
+        text_group.draw(screen)
+        text_group.update(current_time)
+
+        draw_text(TITLE, 60, PINK, WIDTH // 2, HEIGHT // 4)
         
-        # Odświeżenie ekranu
         pygame.display.update()
 
     # Wyjście z gry
     pygame.quit()
 
-
-
-# Uruchomienie gry
 if __name__ == "__main__":
     main_menu()

@@ -1,41 +1,34 @@
 import os
+import tkinter
+from tkinter import filedialog
 import librosa
 import numpy as np
 
-def extract(file_path):
-    # Wczytanie pliku dźwiękowego
+def extract_rhythm(file_path):
+    # Wczytaj plik muzyczny
+      # Podaj ścieżkę do swojego pliku dźwiękowego
     y, sr = librosa.load(file_path)
+    
+    # Wyodrębnij główną melodię przy użyciu transformacji częstotliwościowej
+    onset_times = librosa.onset.onset_detect(y=y, sr=sr, backtrack=True)
 
-    # Wyszukanie charakterystycznego fragmentu dźwięku
-    # Dostosuj te wartości do swoich potrzeb
-    characteristic_instrument = "fortepian"
-    characteristic_duration = 0.5  # w sekundach
+    # Convert onset times to milliseconds
+    onset_times_ms = librosa.frames_to_time(onset_times, sr=sr) * 1000
 
-    # Konwersja czasu na milisekundy
-    characteristic_duration_ms = int(characteristic_duration * 1000)
+    # Print onset times of each note in melody line
+    onset_times_ms = [round(onset) for onset in onset_times_ms]
 
-    # Przeliczenie próbek na czas w milisekundach
-    frame_ms = 1000 / sr
-    characteristic_duration_frames = int(characteristic_duration_ms / frame_ms)
-
-    # Wyszukanie indeksu początkowego fragmentu dźwięku
-    # przy użyciu podobieństwa widma
-    y_stft = librosa.stft(y)
-    characteristic_index = np.argmax(np.mean(np.abs(y_stft), axis=0))
-
-    # Obliczenie czasu pojawienia się dźwięków w milisekundach
-    timestamps = []
-    for i in range(len(y)):
-        if i % characteristic_index == 0:
-            timestamps.append(int(i * frame_ms))
-
-    # Zapisanie wyników do pliku txt
     output_file = f"{os.path.splitext(file_path)[0]}.txt"
-    with open(output_file, "w") as f:
-        for timestamp in timestamps:
-            f.write(str(timestamp) + "\n")
 
-    print("Przetwarzanie zakończone. Wyniki zapisane w pliku:", output_file)
+    np.savetxt(output_file, onset_times_ms, fmt='%d', delimiter='\n')
+    print(f"Pomyślnie przetworzono plik i zapisano wyniki w {output_file}")
 
-file_path = 'songs/wav/fashion_beats.wav'
-extract(file_path)
+if __name__ == "__main__":
+    root = tkinter.Tk()
+
+    root.withdraw()
+
+    current_directory = os.getcwd()
+    song_path = filedialog.askopenfilename(initialdir="songs", filetypes=[("MP3 files", "*.mp3"), ("WAV files", "*.wav")])
+
+    extract_rhythm(song_path)

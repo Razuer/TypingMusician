@@ -36,6 +36,6 @@ def extract_rhythm(file_path, threshold=0.2, freq_range=(200, 6000)):
         print(f"Pomyślnie przetworzono plik i zapisano wyniki w {output_file}")
         return True
 # Przykładowe użycie
-file_path = 'songs/wav/fashion_beats.wav'
-extract_rhythm(file_path, threshold=0.5, freq_range=(1000, 6000))
+file_path = 'songs/wav/shooting-stars.wav'
+extract_rhythm(file_path, threshold=0.2, freq_range=(200, 6000))
 
