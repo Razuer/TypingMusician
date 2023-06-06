@@ -1,6 +1,5 @@
 import pygame
 import random
-
 from settings import *
 
 class Aim(pygame.sprite.Sprite):
@@ -38,6 +37,41 @@ class Aim(pygame.sprite.Sprite):
             self.cooldown = 1
         self.animation()
 
+class Text(pygame.sprite.Sprite):
+    def __init__(self, text, font_size, color, x, y, duration):
+        super().__init__()
+        self.text = text
+        self.font_size = font_size
+        self.color = color
+        self.duration = duration
+        self.start_time = pygame.time.get_ticks()
+
+        self.font = pygame.font.Font(FONT, self.font_size)
+        self.image = self.font.render(self.text, False, self.color)
+
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.center = (round(self.x),round(self.y))
+
+        self.speed_x = random.uniform(-1, 1)
+        self.speed_y = random.uniform(-1, 1)
+
+    def update(self):
+        current_time = pygame.time.get_ticks()
+        elapsed_time = current_time - self.start_time
+
+        if elapsed_time >= self.duration:
+            self.kill()  # Usuwanie sprite'a po zakończeniu czasu trwania
+
+        # Przesunięcie tekstu na ekranie
+        self.x += self.speed_x
+        self.y += self.speed_y
+        self.rect.center = (round(self.x),round(self.y))
+
+        alpha = int(max(0, 255 - (elapsed_time / self.duration) * 255))
+        self.image.set_alpha(alpha)
+
 class Key(pygame.sprite.Sprite):
     
     LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
@@ -46,34 +80,42 @@ class Key(pygame.sprite.Sprite):
     for i in range(1, 8):
         key_image = pygame.image.load(f"graphics/Key/key{i}.png").convert_alpha()
         key_image = pygame.transform.scale_by(key_image, 0.45)
-        KEY_IMGS.append(key_image)
+        if i == 1:
+            color = (200, 152, 230)
+        elif i == 2:
+            color = (196, 242, 148)
+        elif i == 3:
+            color = (120, 248, 252)
+        elif i == 4:
+            color = (254, 171, 239)
+        elif i == 5:
+            color = (244, 251, 161)
+        elif i == 6:
+            color = (94, 242, 124)
+        else :
+            color = (255, 150, 156)
+        KEY_IMGS.append((key_image, color))
 
     font = pygame.font.Font(FONT, 32)
 
-    def __init__(self, screen, revival, speed) -> None:
+    def __init__(self, screen, speed) -> None:
         super().__init__()
         self.screen = screen
         self.key = random.choice(Key.LETTERS)
-        self.revival = revival
-        self.time_alive = 0
-        self.is_alive = True
+        self.touchedAim = False
         self.speed = speed
 
-        self.image = random.choice(Key.KEY_IMGS)
+        self.image, self.color = random.choice(Key.KEY_IMGS)
         self.rect = self.image.get_rect(center=(WIDTH + 20, HEIGHT // 2 + 10))
 
         self.text_shadow = Key.font.render(self.key, False, BLACK)
         self.text = Key.font.render(self.key, False, WHITE)
 
-    def update(self, current_time):
-        if self.is_alive:
-            self.rect.move_ip(-self.speed, 0)
-            self.time_alive = (current_time - self.revival)
+    def update(self):
+        self.rect.move_ip(-self.speed, 0)
 
-            self.drawLetter()
-            self.destroy()
-        else:
-            self.kill()
+        self.drawLetter()
+        self.destroy()
 
     def drawLetter(self):
         offset = 2
@@ -92,11 +134,8 @@ class Key(pygame.sprite.Sprite):
         self.screen.blit(self.text, text_rects[4])
 
     def destroy(self):
-        if self.rect.x <= -100:
+        if self.rect.right <= 0:
             self.kill()
-
-    def __str__(self) -> str:
-        return f"Key - {self.key} - {self.revival} - {self.time_alive} - (x,y): ({self.rect.x},{self.rect.y})"
 
 class Button(pygame.sprite.Sprite):
     HOVER_SOUND = f"sounds/click.mp3"
@@ -149,88 +188,6 @@ class Button(pygame.sprite.Sprite):
                 return True
         else: return False
 
-class Button1(pygame.sprite.Sprite):
-    HOVER_SOUND = f"sounds/click.mp3"
-    def __init__(self, screen, text, x, y, width, height, color, hover_color, border_color, action=None, sound = True):
-        super().__init__()
-        self.screen = screen
-        self.image = pygame.Surface((width, height))
-        self.image.fill(color)
-        self.rect = self.image.get_rect(center=(x, y))
-
-        self.text = text
-        self.font = pygame.font.Font(FONT, int(self.rect.height//1.5))
-        self.color = color
-        self.hover_color = hover_color
-        self.border_color = border_color
-        self.action = action
-        self.sound = sound
-        self.delay = 0
-
-        self.isHovered = False
-    def update(self):
-        mouse = pygame.mouse.get_pos()
-        click = pygame.mouse.get_pressed()
-
-        if self.delay > 0: self.delay -= 0.01
-        
-        if self.rect.collidepoint(mouse):
-            if not self.isHovered:
-                pygame.mixer.Sound(Button1.HOVER_SOUND).play().set_volume(0.5)
-
-            self.image.fill(self.hover_color)
-            self.isHovered = True
-            
-            if click[0] == 1 and self.action is not None and self.delay <= 0:
-                self.delay = 1
-                self.action()
-        else:
-            self.image.fill(self.color)
-            self.isHovered = False
-        pygame.draw.rect(self.image, self.border_color, self.image.get_rect(), 3)  # Dodajemy czarne obramowanie
-        text_surface = self.font.render(self.text, False, BLACK)
-        text_rect = text_surface.get_rect(center = (self.rect.centerx, self.rect.centery-2))
-        self.screen.blit(text_surface, text_rect)
-
-    def checkForInput(self, mouse):
-        if self.rect.collidepoint(mouse):
-            return True
-        else: return False
-
-class Text(pygame.sprite.Sprite):
-    def __init__(self, text, font_size, color, x, y, duration = 0, start_time = 0):
-        super().__init__()
-        self.text = text
-        self.font_size = font_size
-        self.color = color
-        self.duration = duration
-        self.start_time = start_time
-
-        self.font = pygame.font.Font(FONT, self.font_size)
-        self.image = self.font.render(self.text, False, self.color)
-
-        self.rect = self.image.get_rect()
-        self.x = x
-        self.y = y
-        self.rect.center = (round(self.x),round(self.y))
-
-        self.speed_x = random.uniform(-1, 1)
-        self.speed_y = random.uniform(-1, 1)
-
-    def update(self, current_time):
-        elapsed_time = current_time - self.start_time
-
-        if elapsed_time >= self.duration:
-            self.kill()  # Usuwanie sprite'a po zakończeniu czasu trwania
-
-        # Przesunięcie tekstu na ekranie
-        self.x += self.speed_x
-        self.y += self.speed_y
-        self.rect.center = (round(self.x),round(self.y))
-
-        alpha = int(max(0, 255 - (elapsed_time / self.duration) * 255))
-        self.image.set_alpha(alpha)
-
 class Spark(pygame.sprite.Sprite):
     def __init__(self, x, y, color, screen_width, screen_height):
         super().__init__()
@@ -275,3 +232,65 @@ class Sparks(pygame.sprite.Group):
                 color = (random.randint(50, 255), random.randint(50, 255), random.randint(50, 255))
             spark = Spark(x, y, color, self.screen_width, self.screen_height)
             self.add(spark)
+
+class ErrorX(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image_copy = pygame.image.load("graphics/Stats/X-mark.png").convert_alpha()
+        self.image = pygame.transform.scale_by(self.image_copy, 0.5)
+        self.image_copy = pygame.transform.scale_by(self.image_copy, 0.5)
+        self.rect = self.image.get_rect(center = (WIDTH//2, 460))
+        self.start_time = pygame.time.get_ticks()
+        self.duration = 300  # Czas trwania efektu w milisekundach
+
+    def update(self):
+        current_time = pygame.time.get_ticks()
+        elapsed_time = current_time - self.start_time
+
+        # Powiększanie obrazka
+        scale_factor = elapsed_time / self.duration
+        if scale_factor < 0.4:
+            scaled_image = pygame.transform.scale_by(self.image_copy, scale_factor)
+            scaled_rect = scaled_image.get_rect(center=self.rect.center)
+            self.image = scaled_image
+            self.rect = scaled_rect
+
+        # Zanikanie obrazka
+        fade_duration = 400  # Czas trwania zanikania w milisekundach
+        fade_alpha = int(max(255 - (elapsed_time - self.duration) / fade_duration * 255, 0))
+        self.image.set_alpha(fade_alpha)
+
+        if elapsed_time >= self.duration + fade_duration:
+            self.kill()
+
+class ErrorCircle(pygame.sprite.Sprite):
+    def __init__(self, x, y, duration = 200, fade_duration = 300, red = True):
+        super().__init__()
+        if red:
+            self.image_copy = pygame.image.load("graphics/Stats/errorCircle.png").convert_alpha()
+        else:
+            self.image_copy = pygame.image.load("graphics/Stats/goodCircle.png").convert_alpha()
+        self.image_copy = pygame.transform.scale_by(self.image_copy, 0.5)
+        self.image = self.image_copy
+        self.rect = self.image.get_rect(center = (x,y))
+        self.start_time = pygame.time.get_ticks()
+        self.duration = duration  # Czas trwania efektu w milisekundach
+        self.fade_duration = fade_duration
+
+    def update(self):
+        current_time = pygame.time.get_ticks()
+        elapsed_time = current_time - self.start_time
+
+        # Powiększanie obrazka
+        scale_factor = elapsed_time / self.duration + 0.45
+        scaled_image = pygame.transform.scale_by(self.image_copy, scale_factor)
+        scaled_rect = scaled_image.get_rect(center=self.rect.center)
+        self.image = scaled_image
+        self.rect = scaled_rect
+
+        # Zanikanie obrazka
+        fade_alpha = int(max(255 - (elapsed_time - self.duration) / self.fade_duration * 255, 0))
+        self.image.set_alpha(fade_alpha)
+
+        if elapsed_time >= self.duration + self.fade_duration:
+            self.kill()

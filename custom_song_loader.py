@@ -1,8 +1,32 @@
 import os
+import shutil
 import tkinter
 from tkinter import filedialog
 import librosa
 import numpy as np
+
+def load_to_custom():
+    root = tkinter.Tk()
+
+    root.withdraw()
+
+    song_path = filedialog.askopenfilename(initialdir="songs", filetypes=[("MP3 and WAV files", "*.mp3;*.wav"),("MP3 files", "*.mp3"), ("WAV files", "*.wav")])
+    root.destroy()
+    if song_path:
+        return replace_custom_file(song_path)
+    else:
+        print("File was not selected")
+        return ""
+    
+def replace_custom_file(file_path):
+    custom_file = "songs/levels/custom"
+    ext = os.path.splitext(file_path)[1]
+    custom_path = f"{custom_file}{ext}"
+
+    shutil.copy(file_path, custom_path)
+    extract_rhythm(f"{custom_file}{ext}")
+    return custom_path
+    
 
 def extract_rhythm(file_path):
     # Wczytaj plik muzyczny
@@ -10,7 +34,7 @@ def extract_rhythm(file_path):
     y, sr = librosa.load(file_path)
     
     # Wyodrębnij główną melodię przy użyciu transformacji częstotliwościowej
-    onset_times = librosa.onset.onset_detect(y=y, sr=sr, backtrack=False)
+    onset_times = librosa.onset.onset_detect(y=y, sr=sr, backtrack=True)
 
     # Convert onset times to milliseconds
     onset_times_ms = librosa.frames_to_time(onset_times, sr=sr) * 1000
@@ -24,13 +48,4 @@ def extract_rhythm(file_path):
     print(f"Pomyślnie przetworzono plik i zapisano wyniki w {output_file}")
 
 if __name__ == "__main__":
-    root = tkinter.Tk()
-
-    root.withdraw()
-
-    song_path = filedialog.askopenfilename(initialdir="songs", filetypes=[("MP3 and WAV files", "*.mp3;*.wav"),("MP3 files", "*.mp3"), ("WAV files", "*.wav")])
-
-    if song_path:
-        extract_rhythm(song_path)
-    else:
-        print("File was not selected")
+    load_to_custom()
