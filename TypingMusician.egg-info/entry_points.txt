@@ -1,0 +1,2 @@
+[console_scripts]
+typing_musician = game:main_menu

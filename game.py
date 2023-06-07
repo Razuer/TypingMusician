@@ -20,6 +20,15 @@ menu_image = pygame.transform.scale(menu_image, (WIDTH, HEIGHT))
 
 background_image = pygame.image.load(GAME_BG).convert()
 background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
+city1_image = pygame.image.load(OPT_BG).convert()
+city1_image = pygame.transform.scale(city1_image, (WIDTH, HEIGHT))
+city3_image = pygame.image.load(CITY3_BG).convert()
+city3_image = pygame.transform.scale(city3_image, (WIDTH, HEIGHT))
+city4_image = pygame.image.load(CITY4_BG).convert()
+city4_image = pygame.transform.scale(city4_image, (WIDTH, HEIGHT))
+pirate_image = pygame.image.load(PIRATE_BG).convert()
+pirate_image = pygame.transform.scale(pirate_image, (WIDTH, HEIGHT))
+
 
 savescore_image = pygame.image.load('graphics/Background/savescore.png').convert_alpha()
 savescore_image = pygame.transform.scale_by(savescore_image, 1.4)
@@ -174,6 +183,16 @@ def start_game(song_path = None):
     end_timer = pygame.USEREVENT + 3
     pygame.time.set_timer(end_timer, 0)
 
+    if song_path == PERFECT:
+        gameplay_bg = city4_image
+    elif song_path == DREAMLAND:
+        gameplay_bg = city3_image
+    elif song_path == PIRATE:
+        gameplay_bg = pirate_image
+    elif zen:
+        gameplay_bg = city1_image
+    else:
+        gameplay_bg = background_image
     
     sparks = Sparks(WIDTH, HEIGHT, False)
     sparks2 = Sparks(WIDTH, HEIGHT, False)
@@ -227,7 +246,7 @@ def start_game(song_path = None):
 
         if colided:
             colided_dist = aim.rect.centerx - colided[0].rect.centerx
-            if colided_dist > 60:
+            if colided_dist > 62:
                 combo = 0
                 if multiplier > 1:
                     multiCircle_group.add(ErrorCircle(WIDTH-100, 80, 100))
@@ -294,7 +313,7 @@ def start_game(song_path = None):
             sparks.create_sparks(random.randint(50, WIDTH-50), random.randint(20, HEIGHT - 50))
             delayed_sparks.pop(0)
 
-        screen.blit(background_image, (0, 0))
+        screen.blit(gameplay_bg, (0, 0))
 
         sparks.draw(screen)
         sparks.update()

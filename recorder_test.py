@@ -11,6 +11,7 @@ def play_wav(file_path):
 def run_test(file_path):
     # Inicjalizacja modułu Pygame
     pygame.init()
+    pygame.mixer.init()
 
     # Ustawienia okna
     width, height = 800, 600

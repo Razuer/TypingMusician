@@ -1,0 +1,8 @@
+README.md
+setup.py
+TypingMusician.egg-info/PKG-INFO
+TypingMusician.egg-info/SOURCES.txt
+TypingMusician.egg-info/dependency_links.txt
+TypingMusician.egg-info/entry_points.txt
+TypingMusician.egg-info/requires.txt
+TypingMusician.egg-info/top_level.txt

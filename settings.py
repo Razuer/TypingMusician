@@ -11,6 +11,9 @@ SCORES_FILE = "leaderboard.csv"
 MENU_BG = "graphics/Background/city.jpg"
 GAME_BG = "graphics/Background/city2.jpg"
 OPT_BG = "graphics/Background/city1.jpg"
+CITY3_BG = "graphics/Background/city3.jpg"
+CITY4_BG = "graphics/Background/city4.jpg"
+PIRATE_BG = "graphics/Background/pirateship.jpg"
 
 # Game Images
 STRIPE = "graphics/stripe.png"
