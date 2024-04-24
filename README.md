@@ -4,6 +4,12 @@
 
 Typing Musician is a rhythm game designed to test and improve your typing skills while enjoying the music. It provides a fun and engaging experience for players of all ages and skill levels. The game was developed as a project for my studies, combining my passion for music and programming.
 
+
+
+https://github.com/Razuer/TypeMusician/assets/97433470/1149f4ea-297c-4bcb-a5e9-2f4f29d71a88
+
+
+
 ## Features
 
 - Exciting gameplay that combines typing and music.
